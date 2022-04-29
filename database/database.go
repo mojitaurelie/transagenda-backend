@@ -2,27 +2,23 @@ package database
 
 import (
 	"fmt"
+	"github.com/transagenda-back/config"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"log"
-	"os"
 )
-
-const username string = "TRANS_DB_USERNAME"
-const password string = "TRANS_DB_PASSWORD"
-const host string = "TRANS_DB_HOST"
-const port string = "TRANS_DB_PORT"
 
 var db *gorm.DB
 
 func init() {
+	dbConfig := config.Database()
 	var err error
 	db, err = gorm.Open(mysql.Open(
-		fmt.Sprintf("%s:%s@tcp(%s:%s)/transagenda?charset=utf8mb4&parseTime=True&loc=Local",
-			os.Getenv(username),
-			os.Getenv(password),
-			os.Getenv(host),
-			os.Getenv(port)),
+		fmt.Sprintf("%s:%s@tcp(%s:%d)/transagenda?charset=utf8mb4&parseTime=True&loc=Local",
+			dbConfig.Username,
+			dbConfig.Password,
+			dbConfig.Host,
+			dbConfig.Port),
 	), &gorm.Config{})
 	if err != nil {
 		log.Fatal(err)

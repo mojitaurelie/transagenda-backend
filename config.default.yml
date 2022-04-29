@@ -1,0 +1,8 @@
+---
+database:
+  host: localhost
+  password: root
+  port: 3306
+  username: root
+features:
+  allow_register: false

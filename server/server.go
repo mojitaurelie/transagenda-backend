@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/transagenda-back/config"
 	"log"
 	"net/http"
 	"time"
@@ -28,7 +29,9 @@ func Serve() {
 	router.Use(middleware.Logger)
 	router.Route("/api", func(r chi.Router) {
 		r.Post("/login", Login)
-		r.Post("/register", Register)
+		if config.Features().AllowRegister {
+			r.Post("/register", Register)
+		}
 	})
 	log.Println("Server is listening...")
 	err := http.ListenAndServe(":8080", router)
