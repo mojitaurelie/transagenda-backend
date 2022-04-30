@@ -40,13 +40,27 @@ func Connect(username, password string) (*AccessToken, error) {
 	if err := bcrypt.CompareHashAndPassword(user.Password, []byte(password)); err != nil {
 		return nil, err
 	}
-	token, err := token(username)
+	token, err := token(user.ID)
 	if err != nil {
 		return nil, err
 	}
 	return &AccessToken{
 		Token: token,
 	}, nil
+}
+
+func ParseToken(token string) (int, error) {
+	var claims jwt.MapClaims
+	_, err := jwt.ParseWithClaims(token, &claims, func(token *jwt.Token) (interface{}, error) {
+		return secret, nil
+	})
+	if err != nil {
+		return 0, err
+	}
+	if userId, ok := claims["sub"]; ok {
+		return int(userId.(float64)), nil
+	}
+	return 0, errors.New("this token does not have a userId in it")
 }
 
 func Register(user *Registration) error {
@@ -61,9 +75,9 @@ func Register(user *Registration) error {
 	return database.AddUser(user.Username, user.Firstname, user.Lastname, hash, user.Pronouns)
 }
 
-func token(username string) (string, error) {
+func token(userId int) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
-		"sub": username,
+		"sub": userId,
 		"exp": time.Now().Add(1 * time.Hour).Unix(),
 	})
 	return token.SignedString(secret)

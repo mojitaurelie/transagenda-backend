@@ -5,7 +5,10 @@ import (
 	"github.com/transagenda-back/config"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	"log"
+	"os"
+	"time"
 )
 
 var db *gorm.DB
@@ -19,7 +22,17 @@ func init() {
 			dbConfig.Password,
 			dbConfig.Host,
 			dbConfig.Port),
-	), &gorm.Config{})
+	), &gorm.Config{
+		Logger: logger.New(
+			log.New(os.Stdout, "", log.LstdFlags), // io writer
+			logger.Config{
+				SlowThreshold:             time.Second,  // Slow SQL threshold
+				LogLevel:                  logger.Error, // Log level
+				IgnoreRecordNotFoundError: true,         // Ignore ErrRecordNotFound error for logger
+				Colorful:                  true,         // Enable color
+			},
+		),
+	})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -43,4 +56,31 @@ func AddUser(username, firstname, lastname string, password []byte, pronouns int
 		Pronouns:  pronouns,
 	}
 	return db.Save(user).Error
+}
+
+func AppointmentsByUserId(userId int) ([]*Appointment, error) {
+	var appointments []*Appointment
+	err := db.Preload("Contact").Model(Appointment{}).Where(Appointment{UserId: userId}).Find(&appointments).Error
+	if err != nil {
+		return nil, err
+	}
+	return appointments, nil
+}
+
+func PrescriptionsByUserId(userId int) ([]*Prescription, error) {
+	var prescriptions []*Prescription
+	err := db.Preload("Medecines").Model(Prescription{}).Where(Appointment{UserId: userId}).Find(&prescriptions).Error
+	if err != nil {
+		return nil, err
+	}
+	return prescriptions, nil
+}
+
+func ContactsByUserId(userId int) ([]*Contact, error) {
+	var contacts []*Contact
+	err := db.Model(Contact{}).Where(Contact{UserId: userId}).Find(&contacts).Error
+	if err != nil {
+		return nil, err
+	}
+	return contacts, nil
 }

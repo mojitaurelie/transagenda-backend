@@ -1,37 +1,36 @@
 package server
 
 import (
-	"encoding/json"
+	"context"
+	"errors"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/transagenda-back/authentication"
 	"github.com/transagenda-back/config"
 	"log"
 	"net/http"
-	"time"
 )
 
-type httpError struct {
-	Status    int       `json:"status"`
-	Timestamp time.Time `json:"timestamp"`
-	Error     string    `json:"error"`
-	Message   string    `json:"message"`
-	Path      string    `json:"path"`
-}
+type ContextKey string
 
-type successMessage struct {
-	Status    int       `json:"status"`
-	Timestamp time.Time `json:"timestamp"`
-	Message   string    `json:"message"`
-}
+const UserIdKey ContextKey = "userId"
 
+// Serve start the http server
 func Serve() {
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
+	router.Use(recovery)
 	router.Route("/api", func(r chi.Router) {
 		r.Post("/login", Login)
 		if config.Features().AllowRegister {
 			r.Post("/register", Register)
 		}
+		r.Group(func(secureRouter chi.Router) {
+			secureRouter.Use(authMiddleware)
+			secureRouter.Get("/appointments", Appointments)
+			secureRouter.Get("/prescriptions", Prescriptions)
+			secureRouter.Get("/contacts", Contacts)
+		})
 	})
 	log.Println("Server is listening...")
 	err := http.ListenAndServe(":8080", router)
@@ -40,78 +39,40 @@ func Serve() {
 	}
 }
 
-func internalServerError(w http.ResponseWriter, r *http.Request) {
-	e := httpError{
-		Status:    500,
-		Error:     "Internal Server Error",
-		Message:   "The server encountered an unexpected condition that prevented it from fulfilling the request.",
-		Path:      r.RequestURI,
-		Timestamp: time.Now(),
-	}
-
-	payload, err := json.Marshal(e)
-	if err != nil {
-		log.Println(err)
-	}
-	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(500)
-	_, err = w.Write(payload)
-	if err != nil {
-		log.Println(err)
-	}
+// authMiddleware filter the request
+func authMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		header := r.Header.Get("Authorization")
+		if len(header) > 7 {
+			userId, err := authentication.ParseToken(header[7:])
+			if err != nil {
+				unauthorized(w, r)
+				return
+			}
+			ctx := context.WithValue(r.Context(), UserIdKey, userId)
+			r = r.WithContext(ctx)
+			next.ServeHTTP(w, r)
+			return
+		}
+		unauthorized(w, r)
+	})
 }
 
-func unauthorized(w http.ResponseWriter, r *http.Request) {
-	e := httpError{
-		Status:    401,
-		Error:     "Unauthorized",
-		Message:   "The request has not been completed because it lacks valid authentication credentials for the requested resource.",
-		Path:      r.RequestURI,
-		Timestamp: time.Now(),
+func userIdFromContext(ctx context.Context) (int, error) {
+	if userId, ok := ctx.Value(UserIdKey).(int); ok {
+		return userId, nil
 	}
-
-	payload, err := json.Marshal(e)
-	if err != nil {
-		log.Println(err)
-	}
-	w.Header().Add("Content-Type", "application/json")
-	w.Header().Add("WWW-Authenticate", "Custom realm=\"Login via /api/login\"")
-	w.WriteHeader(401)
-	_, err = w.Write(payload)
-	if err != nil {
-		log.Println(err)
-	}
+	return 0, errors.New("userId not found in context")
 }
 
-func ok(obj interface{}, w http.ResponseWriter, _ *http.Request) {
-	payload, err := json.Marshal(obj)
-	if err != nil {
-		log.Println(err)
-	}
-	w.Header().Add("Content-Type", "application/json")
-	_, err = w.Write(payload)
-	if err != nil {
-		log.Println(err)
-	}
-}
-
-func badRequest(message string, w http.ResponseWriter, r *http.Request) {
-	e := httpError{
-		Status:    400,
-		Error:     "Bad Request",
-		Message:   message,
-		Path:      r.RequestURI,
-		Timestamp: time.Now(),
-	}
-
-	payload, err := json.Marshal(e)
-	if err != nil {
-		log.Println(err)
-	}
-	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(400)
-	_, err = w.Write(payload)
-	if err != nil {
-		log.Println(err)
-	}
+func recovery(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			err := recover()
+			if err != nil {
+				internalServerError(w, r)
+			}
+		}()
+		next.ServeHTTP(w, r)
+	})
 }

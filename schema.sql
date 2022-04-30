@@ -25,11 +25,12 @@ DROP TABLE IF EXISTS `appointments`;
 CREATE TABLE `appointments` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `date` datetime NOT NULL,
-  `contact` bigint(20) NOT NULL,
-  `information` text NOT NULL,
+  `contact_refer` bigint(20) NOT NULL,
+  `information` text DEFAULT NULL,
   `address` text NOT NULL,
+  `user_id` bigint(20) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -38,6 +39,7 @@ CREATE TABLE `appointments` (
 
 LOCK TABLES `appointments` WRITE;
 /*!40000 ALTER TABLE `appointments` DISABLE KEYS */;
+INSERT INTO `appointments` VALUES (1,'2022-03-13 08:30:00',1,NULL,'32 rue oerfhoiez',1);
 /*!40000 ALTER TABLE `appointments` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -52,9 +54,10 @@ CREATE TABLE `contacts` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `firstname` varchar(100) NOT NULL,
   `lastname` varchar(100) NOT NULL,
-  `information` text NOT NULL,
+  `information` text DEFAULT NULL,
+  `user_id` bigint(20) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -63,6 +66,7 @@ CREATE TABLE `contacts` (
 
 LOCK TABLES `contacts` WRITE;
 /*!40000 ALTER TABLE `contacts` DISABLE KEYS */;
+INSERT INTO `contacts` VALUES (1,'fuho','ferijefjrp',NULL,1);
 /*!40000 ALTER TABLE `contacts` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -80,7 +84,7 @@ CREATE TABLE `medecines` (
   `unit` varchar(100) NOT NULL,
   `prescription` bigint(20) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -89,6 +93,7 @@ CREATE TABLE `medecines` (
 
 LOCK TABLES `medecines` WRITE;
 /*!40000 ALTER TABLE `medecines` DISABLE KEYS */;
+INSERT INTO `medecines` VALUES (1,'Eostrodose',5,'pression/jour',1),(2,'Progesteron',1,'jour',1);
 /*!40000 ALTER TABLE `medecines` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -100,11 +105,12 @@ DROP TABLE IF EXISTS `prescriptions`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `prescriptions` (
-  `id` bigint(20) NOT NULL,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `expire` date NOT NULL,
   `information` text DEFAULT NULL,
+  `user_id` bigint(20) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -113,6 +119,7 @@ CREATE TABLE `prescriptions` (
 
 LOCK TABLES `prescriptions` WRITE;
 /*!40000 ALTER TABLE `prescriptions` DISABLE KEYS */;
+INSERT INTO `prescriptions` VALUES (1,'2022-06-13',NULL,1);
 /*!40000 ALTER TABLE `prescriptions` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -131,7 +138,7 @@ CREATE TABLE `users` (
   `lastname` varchar(100) NOT NULL,
   `pronouns` int(11) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -140,6 +147,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
+INSERT INTO `users` VALUES (1,'thelilfrog','$2y$10$RHWfOW4W/3fvf5mNeHai1O4knh9L/W6m28LGTH82sAhgb6kmLnv2u','Aurélie','Delhaie',1);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -152,4 +160,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-04-29 22:52:42
+-- Dump completed on 2022-04-30 19:33:16
