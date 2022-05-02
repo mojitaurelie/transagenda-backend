@@ -26,13 +26,14 @@ func Serve() {
 			r.Post("/register", Register)
 		}
 		r.Route("/system", func(systemRouter chi.Router) {
-			systemRouter.Get("/allow_register", AllowRegister)
+			systemRouter.Get("/information", Information)
 		})
 		r.Group(func(secureRouter chi.Router) {
 			secureRouter.Use(authMiddleware)
 			secureRouter.Get("/appointments", Appointments)
 			secureRouter.Get("/prescriptions", Prescriptions)
 			secureRouter.Get("/contacts", Contacts)
+			secureRouter.Get("/user", User)
 		})
 	})
 	log.Println("Server is listening...")

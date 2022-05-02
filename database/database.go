@@ -47,6 +47,15 @@ func UserByUsername(username string) (*User, error) {
 	return user, nil
 }
 
+func UserById(userId int) (*User, error) {
+	var user *User
+	err := db.Model(User{}).Where(User{ID: userId}).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
 func AddUser(username, firstname, lastname string, password []byte, pronouns int) error {
 	user := &User{
 		Username:  username,

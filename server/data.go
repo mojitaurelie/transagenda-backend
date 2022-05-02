@@ -46,3 +46,17 @@ func Contacts(w http.ResponseWriter, r *http.Request) {
 	}
 	ok(contacts, w, r)
 }
+
+func User(w http.ResponseWriter, r *http.Request) {
+	userId, err := userIdFromContext(r.Context())
+	if err != nil {
+		internalServerError(w, r)
+		return
+	}
+	user, err := database.UserById(userId)
+	if err != nil {
+		internalServerError(w, r)
+		return
+	}
+	ok(user, w, r)
+}

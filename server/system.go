@@ -2,12 +2,28 @@ package server
 
 import (
 	"github.com/transagenda-back/config"
+	"github.com/transagenda-back/constant"
 	"net/http"
+	"runtime"
 )
 
-func AllowRegister(w http.ResponseWriter, r *http.Request) {
-	result := map[string]bool{
-		"allow_register": config.Features().AllowRegister,
+type information struct {
+	AllowRegister  bool   `json:"allow_register"`
+	Version        string `json:"version"`
+	ApiVersion     int    `json:"api_version"`
+	GoVersion      string `json:"go_version"`
+	OsName         string `json:"os_name"`
+	OsArchitecture string `json:"os_architecture"`
+}
+
+func Information(w http.ResponseWriter, r *http.Request) {
+	info := information{
+		AllowRegister:  config.Features().AllowRegister,
+		Version:        constant.Version,
+		ApiVersion:     constant.ApiVersion,
+		GoVersion:      runtime.Version(),
+		OsName:         runtime.GOOS,
+		OsArchitecture: runtime.GOARCH,
 	}
-	ok(result, w, r)
+	ok(info, w, r)
 }
