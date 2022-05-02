@@ -1,2 +1,7 @@
 transagenda-back
+
 config.yml
+
+.idea/
+vendor/
+go.sum
