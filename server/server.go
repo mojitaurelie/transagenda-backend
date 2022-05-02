@@ -25,6 +25,9 @@ func Serve() {
 		if config.Features().AllowRegister {
 			r.Post("/register", Register)
 		}
+		r.Route("/system", func(systemRouter chi.Router) {
+			systemRouter.Get("/allow_register", AllowRegister)
+		})
 		r.Group(func(secureRouter chi.Router) {
 			secureRouter.Use(authMiddleware)
 			secureRouter.Get("/appointments", Appointments)
